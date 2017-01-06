@@ -1,0 +1,45 @@
+// ==UserScript==
+// @name        test3
+// @namespace   kj
+// @include     https://www.google.ca/*
+// @version     1
+// @grant       none
+// ==/UserScript==
+
+
+var hideBtn = document.createElement('a');
+
+  hideBtn.setAttribute('id','1');
+  hideBtn.setAttribute('class','js-hide-btn');
+  hideBtn.setAttribute('href','javascript:;');
+  hideBtn.setAttribute('style','z-index:9999;position:fixed;top:10px;left:10px;display:block;padding:10px;background:#c1c1c1;box-shadow:3px 3px 2px #444;');
+  hideBtn.innerHTML = 'Remove';
+ 
+document.body.style.background = "#f1f1f1";
+document.body.appendChild(hideBtn);
+
+var btnListener = function(){
+   console.log(this);
+  
+  
+   localStorage.setItem('list1', 'item');
+}
+
+var elmlink = document.getElementsByClassName('js-hide-btn')[0];
+elmlink.addEventListener('click', btnListener, true);
+
+
+console.log('done');
+
+
+/*GET LOCAL STORAGE AND PARSE TO FIND OWN LISTS*/
+var key = 'GM';
+var storageLists = [];
+
+for ( var storageIitem in window.localStorage ){
+ if ( storageIitem.substring( 0 , 2 ) === key){
+  var data = window.localStorage.getItem( storageIitem ) );
+  storageLists.push(storageIitem);
+  console.log(storageLists);
+ }
+
