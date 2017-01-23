@@ -1,0 +1,62 @@
+// ==UserScript==
+// @name        kjj rotate
+// @namespace   kjj 
+// @description kjj rotate images on ad page
+// @include     http://www.kijiji.ca/*
+// @version     1
+// @grant       none
+// ==/UserScript==
+
+var imageList = $('#ShownImage li');
+var rotateTry = 1;
+var attachedBtns = false;
+
+//1. Attach buttons to each image and validate the process status
+$.each(imageList, function(index, item){
+  $(item).css('position','relative').prepend('<a class="js-rotate-btn"  href="javascript:;" style="z-index:9999;position:absolute;top:10px;left:10px;display:block;padding:10px;background:#04bbff;color:#fff;text-decoration:none;font-weight:600;box-shadow:3px 3px 2px #444;">Rotate</a>');
+
+  if ((index + 1) == imageList.length) {
+    attachedBtns = true;
+  }
+});  
+
+
+/* 2. Declare rotation rules and cases */
+var jsRotateEvent = function(){
+
+  var deg = 45 * rotateTry > 359 ? 0 : 45 * rotateTry;
+  
+  if (deg == 0) {  rotateTry = 1; }
+  
+  $(this).next('img').css('transform', 'rotate(' + deg + 'deg)');
+  
+  rotateTry++;
+  
+}
+
+/* 3. Attach eventListeners */
+var setEventListeners = function(){
+  rotateTry = 1;
+    
+  if (attachedBtns) {
+    var elmlinkList = document.getElementsByClassName('js-rotate-btn');
+    
+    $.each(elmlinkList, function(index, elmlink){
+       elmlink.addEventListener('click', jsRotateEvent, true);
+
+    });
+
+    var navArrowLeft =  document.getElementsById('ArrowPrev');
+    var navArrowRight =  document.getElementsById('ArrowNext');
+
+    navArrowLeft.addEventListener('click', setEventListeners, true);
+    navArrowRight.addEventListener('click', setEventListeners, true);
+  } else {
+    console.log('checking btns again');
+    setTimeout(setEventListeners, 3000);
+  }
+}
+
+ 
+//Trigger listener script
+setTimeout(setEventListeners, 3000);
