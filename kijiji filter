@@ -1,0 +1,150 @@
+// ==UserScript==
+// @name        kjj listing filter
+// @namespace   kjj
+// @description kjj create viewed listings
+// @include     http://www.kijiji.ca/*
+// @version     1
+// @grant       none
+// ==/UserScript==
+
+
+/* Get/Set LocalStorage */
+//1. Get current location and search term
+var urlElementsArray = (window.location.href).split("/");
+
+//2. Declare variables necessary for storage list creation
+var searchArea = '';
+var searchTerm = '';
+var domainReached = false;
+var domainPosition = 0;
+var searchStorageList ='';
+
+//3. Parse url to determin necessary parts for storage list
+$.each(urlElementsArray, function(index, urlPart){
+  if (domainReached){
+    
+    switch (index) {
+      case (domainPosition + 1):
+         searchArea = urlPart;
+        break;
+      case (domainPosition + 2):
+         searchTerm = urlPart;
+        break;
+    }
+
+  } else {
+    if (urlPart == 'www.kijiji.ca' ) {
+      domainReached = true;
+      domainPosition = index;
+    } 
+    return;
+  }
+
+});
+
+//4. Create list name 
+if (searchArea != '' && searchTerm != '') {
+  searchStorageList = 'GM_'+searchArea+"_"+searchTerm;
+}
+
+//pageStorageListKeys = [];
+//@TODO figure out a way to wrap getItem function
+var pageStorageListKeys = localStorage.getItem(pageStorageList);
+console.log('**', pageStorageList, setTimeout(getLocalStorageList, 0),  localStorage.getItem(pageStorageList));
+
+//Save current page list to storage
+if (pageStorageListKeys  == null) {
+  console.log('save');
+  pageStorageListKeys = [];
+  setTimeout(saveLocalStorageList, 0);
+}
+
+
+/*----------------------------------------------------------------------------------------------*/
+/* 5. Save localStorage*/
+var saveLocalStorageList = function(){
+  console.log('saving',pageStorageList, pageStorageListKeys);
+  localStorage.setItem(pageStorageList, pageStorageListKeys);
+}
+
+/* 4. Get localStorage Items*/
+var getLocalStorageList = function(){
+   localStorage.getItem(pageStorageList);
+}
+
+/* 3. Hide element */
+var jsHideEvent = function(){
+  
+  var adItem = $(this).closest('.search-item.regular-ad');
+  pageStorageListKeys.push($(this).data('ad-id'));
+  
+  console.log('pageStorageListKeys=', pageStorageListKeys);
+  setTimeout(saveLocalStorageList, 0);
+}
+
+/* 2. Attach eventListener */
+var setEventListeners = function(){
+  
+  if (attachedBtns) {
+    var elmlinkList = document.getElementsByClassName('js-hide-btn');
+    $.each(elmlinkList, function(index, elmlink){
+       elmlink.addEventListener('click', jsHideEvent, true);
+    });
+        
+  } else {
+    console.log('checking btns again');
+    setTimeout(setEventListeners, 3000);
+  }
+}
+
+
+
+
+
+//Create and attach remove button
+var hideBtn = document.createElement('a');
+  hideBtn.setAttribute('id','1');
+  hideBtn.setAttribute('class','js-hide-btn');
+  hideBtn.setAttribute('href','javascript:;');
+  hideBtn.setAttribute('style','z-index:9999;position:absolute;top:0px;left:10px;display:block;padding:10px;background:#04bbff;color:#fff;text-decoration:none;font-weight:600;box-shadow:3px 3px 2px #444;');
+  hideBtn.innerHTML = 'Remove';
+ 
+document.body.style.background = "#f1f1f1";
+//document.body.appendChild(hideBtn);
+ 
+var itemList = $('.search-item.regular-ad');
+var numberOfAds = $('.search-item.regular-ad').length;
+attachedBtns = false;
+ 
+$.each(itemList, function(index, item){
+  $(item).prepend('<a class="js-hide-btn"  href="javascript:;" data-ad-id="'+$(item).data('ad-id')+'" style="z-index:9999;position:absolute;top:10px;left:10px;display:block;padding:10px;background:#04bbff;color:#fff;text-decoration:none;font-weight:600;box-shadow:3px 3px 2px #444;">Remove</a>');
+
+ if ((index + 1) == numberOfAds) {
+      attachedBtns = true;
+  }
+});          
+        
+
+/* 1. Trigger Event Attacher listening*/
+setTimeout(setEventListeners, 0);
+
+
+
+console.log('done');
+
+
+/*GET LOCAL STORAGE AND PARSE TO FIND OWN LISTS*/
+var key = 'GM';
+var storageLists = [];
+
+/*$.each(window.localStorage, function(index, storageIitem){
+
+ if ( storageIitem.substring( 0 , 2 ) === key){
+  var data = window.localStorage.getItem( storageIitem ) );
+  storageLists.push(storageIitem);
+  console.log(storageLists);
+ }
+}
+*/
+
+
