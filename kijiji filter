@@ -17,7 +17,7 @@ var searchTerm = '';
 var domainReached = false;
 var domainPosition = 0;
 var searchStorageListName ='';
-var pageStorageListValues = [['2','2'],['3','3']];
+var pageStorageListValues = [];
 
 //3. Parse url to determine necessary parts for storage list
 $.each(urlElementsArray, function(index, urlPart){
@@ -55,6 +55,9 @@ console.log('%cTry to get list => '+searchStorageListName+' = '+pageStorageList,
 if (pageStorageList == null) {
   localStorage.setItem(searchStorageListName, JSON.stringify(pageStorageListValues));//setTimeout(saveLocalStorageList, 0);
   console.log('%cSaved new list => '+searchStorageListName+' = '+pageStorageListValues, 'color:yellow;');
+} else {
+  pageStorageListValues = pageStorageList;
+  
 }
 
 
@@ -63,14 +66,33 @@ if (pageStorageList == null) {
 
 //Create and attach remove button
 document.body.style.background = "#f1f1f1";//drop a hint GM is fine
+//Hide clear ads
+$('.search-item.third-party, .adsense-top-bar').hide();           //also available classes: cas-channel top-feature  
+
 
 var itemList = $('.search-item.regular-ad');
 var numberOfAds = $('.search-item.regular-ad').length;
 var attachedBtns = false;
- 
-$.each(itemList, function(index, item){
-  $(item).prepend('<a class="js-hide-btn"  href="javascript:;" data-ad-id="'+$(item).data('ad-id')+'" style="z-index:9999;position:absolute;top:10px;left:10px;display:block;padding:10px;background:#04bbff;color:#fff;text-decoration:none;font-weight:600;box-shadow:3px 3px 2px #444;">Remove</a>');
+   
 
+
+$.each(itemList, function(index, item){
+  
+  if ( $.inArray( $(item).data('ad-id'), pageStorageListValues)  != -1){
+    $(item).hide();
+
+  } else {
+      $(item).prepend('<a class="js-hide-btn"  href="javascript:;" data-ad-id="'+$(item).data('ad-id')+'" style="z-index:9999;position:absolute;top:10px;left:10px;display:block;padding:10px;background:#04bbff;color:#fff;text-decoration:none;font-weight:600;box-shadow:3px 3px 2px #444;">Remove</a>');
+
+  }
+  
+
+  
+  
+  
+  
+  
+  //spot the list end
  if ((index + 1) == numberOfAds) {
       attachedBtns = true;
   }
@@ -82,9 +104,16 @@ $.each(itemList, function(index, item){
 
 
 /*----------------------------------------------------------------------------------------------*/
+/*Parse page and hide all ads from storage list*/
+var parsePage = function(){
+  console.log('%cParsing the page ','color:yellow');
+  
+}
+
+
 /* 5. Save localStorage*/
 var saveLocalStorageList = function(){
-  console.log('%cSaving '+searchStorageListName,'color:orange');
+  console.log('%cSaving '+searchStorageListName +' - '+ pageStorageListValues,'color:orange');
   localStorage.setItem(searchStorageListName, JSON.stringify(pageStorageListValues));//setTimeout(saveLocalStorageList, 0);
 }
 
@@ -96,9 +125,10 @@ var getLocalStorageList = function(){
 /* 3. Hide element */
 var jsHideEvent = function(){
   
-  //var adItem = $(this).closest('.search-item.regular-ad');
-
-  pageStorageListValues = pageStorageListValues.push($(this).data('ad-id'));
+  var adItem = $(this).closest('.search-item.regular-ad');
+  $(adItem).hide();
+  
+  pageStorageListValues.push($(this).data('ad-id'));
   console.log('%cPageStorageListValues - '+pageStorageListValues, 'color:orange');
 
   localStorage.setItem(searchStorageListName, JSON.stringify(pageStorageListValues));//setTimeout(saveLocalStorageList, 0);
