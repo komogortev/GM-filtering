@@ -43,54 +43,46 @@ $.each(urlElementsArray, function(index, urlPart){
 //4. Create list name 
 if (searchArea != '' && searchTerm != '') {
   searchStorageListName = 'GM_'+searchArea+"_"+searchTerm;
-  console.log('searchStorageListName: '+searchStorageListName);
+  console.log('list name: searchStorageListName: '+searchStorageListName);
 }
 
-//Try to retrieve list
+//5. Try to retrieve list
 var pageStorageList = JSON.parse(localStorage.getItem(searchStorageListName));//setTimeout(getLocalStorageList, 0);
 console.log('%cTry to get list => '+searchStorageListName+' = '+pageStorageList,'color:yellow;');
 
 
-//Crate new and save current page list to storage
+//6. Create new and save current page list to storage
 if (pageStorageList == null) {
   localStorage.setItem(searchStorageListName, JSON.stringify(pageStorageListValues));//setTimeout(saveLocalStorageList, 0);
   console.log('%cSaved new list => '+searchStorageListName+' = '+pageStorageListValues, 'color:yellow;');
 } else {
   pageStorageListValues = pageStorageList;
-  
+  console.log('%cFound existing list '+pageStorageList, 'color:yellow;');
+
 }
 
 
 
-
-
-//Create and attach remove button
+//7. Create and attach remove button
 document.body.style.background = "#f1f1f1";//drop a hint GM is fine
 //Hide clear ads
-$('.search-item.third-party, .adsense-top-bar').hide();           //also available classes: cas-channel top-feature  
+$('.search-item.third-party, .adsense-top-bar,.search-item.top-feature, .adsense-container, .banner.sponsored').remove();           //also available classes: cas-channel top-feature  
 
+$('body').prepend('<a class="js-merge-btn"  href="javascript:;" style="z-index:9999;position:absolute;top:10px;left:10px;display:block;padding:10px;background:#111;color:#fff;text-decoration:none;font-weight:600;box-shadow:3px 3px 2px #444;">Merge Pages</a>');
 
 var itemList = $('.search-item.regular-ad');
 var numberOfAds = $('.search-item.regular-ad').length;
 var attachedBtns = false;
    
 
-
+//initial document render parse
 $.each(itemList, function(index, item){
   
   if ( $.inArray( $(item).data('ad-id'), pageStorageListValues)  != -1){
-    $(item).hide();
-
+    $(item).remove();
   } else {
       $(item).prepend('<a class="js-hide-btn"  href="javascript:;" data-ad-id="'+$(item).data('ad-id')+'" style="z-index:9999;position:absolute;top:10px;left:10px;display:block;padding:10px;background:#04bbff;color:#fff;text-decoration:none;font-weight:600;box-shadow:3px 3px 2px #444;">Remove</a>');
-
-  }
-  
-
-  
-  
-  
-  
+  } 
   
   //spot the list end
  if ((index + 1) == numberOfAds) {
@@ -99,30 +91,26 @@ $.each(itemList, function(index, item){
 });          
 
 
-
-
-
-
 /*----------------------------------------------------------------------------------------------*/
-/*Parse page and hide all ads from storage list*/
-var parsePage = function(){
+/*8. Parse page and hide all ads from storage list*/
+var parsePage = function(item){
   console.log('%cParsing the page ','color:yellow');
   
 }
 
 
-/* 5. Save localStorage*/
+/* 9. Save localStorage*/
 var saveLocalStorageList = function(){
   console.log('%cSaving '+searchStorageListName +' - '+ pageStorageListValues,'color:orange');
   localStorage.setItem(searchStorageListName, JSON.stringify(pageStorageListValues));//setTimeout(saveLocalStorageList, 0);
 }
 
-/* 4. Get localStorage Items*/
+/* 10. Get localStorage Items*/
 var getLocalStorageList = function(){
    localStorage.getItem(pageStorageList);
 }
 
-/* 3. Hide element */
+/* 11. Hide element */
 var jsHideEvent = function(){
   
   var adItem = $(this).closest('.search-item.regular-ad');
@@ -137,7 +125,8 @@ var jsHideEvent = function(){
   //setTimeout(saveLocalStorageList, 0);
 }
 
-/* 2. Attach eventListener */
+
+/* 12. Attach eventListener */
 var setEventListeners = function(){
   
   if (attachedBtns) {
@@ -146,6 +135,11 @@ var setEventListeners = function(){
     var elmlinkList = document.getElementsByClassName('js-hide-btn');
     $.each(elmlinkList, function(index, elmlink){
        elmlink.addEventListener('click', jsHideEvent, true);
+    });
+    
+    var elmMergeBtn = document.getElementsByClassName('js-merge-btn');
+    $.each(elmMergeBtn, function(index, elmBtn){
+       elmBtn.addEventListener('click', jsMergeEvent, true);
     });
         
   } else {
@@ -158,24 +152,59 @@ var setEventListeners = function(){
 
 
 
+/* 13. Check if the search result is too long */
+/* 11. Hide element */
+var jsMergeEvent = function(){
+  
+var pages = $('.bottom-bar .pagination a:not([title=Suivante]):not([title=Next]):not(.rss-link)');
 
+var lastPage = pages[pages.length -1];
+
+var pageBuffer = 0;
+
+$.each(pages, function(index, page){
+  if (index > 4) {
+    return;
+  }
+    console.log('processing page: '+index);
+
+  $.ajax({
+      url: $(page).attr('href'),
+    }).done(function( data ) {
+       var html = $.parseHTML(data);
+       var pageList = $(html).find('.search-item.regular-ad');
+       var pageBtns = false;
+
+
+        //prepare list
+        $.each(pageList, function(index, pageItem){
+          if ( $.inArray( $(pageItem).data('ad-id'), pageStorageListValues) != -1){
+            pageList.splice(index,1);
+            console.log('kick item');
+          } else {
+              $(pageItem).prepend('<a class="js-hide-btn"  href="javascript:;" data-ad-id="'+$(pageItem).data('ad-id')+'" style="z-index:9999;position:absolute;top:10px;left:10px;display:block;padding:10px;background:#04bbff;color:#fff;text-decoration:none;font-weight:600;box-shadow:3px 3px 2px #444;">Remove</a>');
+          } 
+           //spot the list end
+           if ((index + 1) == pageList.length) {
+                pageBtns = true;
+               $('.bottom-bar').before(pageList);
+               setTimeout(setEventListeners, 3000);     
+            }
+        });     
+      
         
 
-/* 1. Trigger Event Attacher listening*/
+    });
+     
+});
+}
+
+
+
+ 
+
+/* 13. Trigger Event Attacher listening*/
 setTimeout(setEventListeners, 0);
 
 
 
-
-
-/*GET LOCAL STORAGE AND PARSE TO FIND OWN LISTS*/
-
-/*$.each(window.localStorage, function(index, storageIitem){
-
- if ( storageIitem.substring( 0 , 2 ) === key){
-  var data = window.localStorage.getItem( storageIitem ) );
-  storageLists.push(storageIitem);
-  console.log(storageLists);
- }
-}
-*/
